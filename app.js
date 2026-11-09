@@ -8,13 +8,14 @@
    full HTML document string. */
 
 /* ===== Google sign-in CONFIG =====
-   To activate real Google sign-in, the site owner must create a Google
-   OAuth client ID (Google Cloud Console > APIs & Services > Credentials >
-   OAuth client ID, type "Web application", authorised JavaScript origin
-   https://prabir-sell.github.io) and paste it below in place of
-   YOUR_GOOGLE_CLIENT_ID_HERE. Until then the button shows an honest
-   "not connected yet" message and NO Google account is faked. */
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE";
+   Google OAuth client ID for PRABIR.DEV (Web application, authorised
+   JavaScript origin https://prabir-sell.github.io). Reviews REQUIRE
+   Google sign-in: nobody can post a review without authorising with
+   their Google account, and the signed-in Google name is used for the
+   review. NOTE: reviews are still stored in localStorage (this browser
+   only) until a backend is added — sign-in verifies identity, it does
+   not yet share reviews across devices. */
+const GOOGLE_CLIENT_ID = "923578354054-o0p3c9tg7b15fg6maknogtvvrbmve7mb.apps.googleusercontent.com";
 const WA_NUMBER = "918777824316";
 const WA_BASE = "https://wa.me/" + WA_NUMBER;
 
@@ -316,6 +317,7 @@ function renderPricing(){
 /* ===== Reviews (local demo until Google sign-in is connected) ===== */
 const REVIEW_KEY = "pdv2_reviews";
 let signedInName = "";
+let googleSignedIn = false;
 function loadReviews(){
   try {
     const saved = JSON.parse(localStorage.getItem(REVIEW_KEY) || "[]");
@@ -356,6 +358,7 @@ function initGoogle(){
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: function(resp){
+            googleSignedIn = true;
             signedInName = "Google user";
             $("#signedInAs").textContent = "Signed in with Google.";
             $("#gsiNote").textContent = "Signed in with Google. Your review will be posted under your Google name.";
@@ -364,6 +367,7 @@ function initGoogle(){
               if (payload && payload.name){
                 signedInName = payload.name;
                 $("#revName").value = payload.name;
+                $("#revName").readOnly = true;
                 $("#signedInAs").textContent = "Signed in as " + payload.name + ".";
               }
             } catch (e) {}
@@ -438,7 +442,12 @@ function init(){
   renderGrid();
   $("#reviewForm").addEventListener("submit", function(e){
     e.preventDefault();
-    const name = $("#revName").value.trim();
+    if (!googleSignedIn){
+      $("#gsiNote").textContent = "Please sign in with Google first — a review can only be posted after Google authorisation. Tap 'Sign in with Google' above.";
+      $("#gsiButton").click();
+      return;
+    }
+    const name = signedInName || $("#revName").value.trim();
     const text = $("#revText").value.trim();
     if (!name || !text) return;
     const list = loadReviews();
@@ -446,7 +455,7 @@ function init(){
     saveReviews(list);
     renderReviews();
     $("#revText").value = "";
-    $("#gsiNote").textContent = "Thanks! Your review is saved locally in this demo and will be shared publicly once Google sign-in is connected.";
+    $("#gsiNote").textContent = "Thanks, " + name + "! Your review is posted under your Google name. (Stored in this browser for now — shared public reviews need a backend.)";
   });
   initGoogle();
   window.addEventListener("hashchange", route);
