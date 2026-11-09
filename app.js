@@ -60,11 +60,10 @@ const FAQS = [
   ["Is free hosting available?","Yes. Eligible static websites can use GitHub Pages."],
   ["What happens if maintenance expires?","Your website remains yours and remains accessible as long as hosting is active."]
 ];
-const SAMPLE_REVIEWS = [
-  {name:"Rahul S.", stars:5, text:"My restaurant website was ready in two days. The menu and booking form work perfectly on mobile.", date:"2026-11-02", sample:true},
-  {name:"Ananya D.", stars:5, text:"Affordable price and full source code. I could change the colours myself after delivery.", date:"2026-10-24", sample:true},
-  {name:"Imran K.", stars:4, text:"Good design for the price. WhatsApp support replied quickly and customised my homepage.", date:"2026-10-12", sample:true}
-];
+/* No seeded reviews: only genuine reviews posted by visitors who signed
+   in with Google are shown. Never invent reviews from real-sounding
+   people — a fake review shown as real would mislead buyers. */
+const SAMPLE_REVIEWS = [];
 
 /* ===== Helpers (DOM only — no HTML strings with closing tags) ===== */
 function $(s){ return document.querySelector(s); }
@@ -323,7 +322,7 @@ function loadReviews(){
     const saved = JSON.parse(localStorage.getItem(REVIEW_KEY) || "[]");
     if (Array.isArray(saved) && saved.length) return saved;
   } catch (e) {}
-  return SAMPLE_REVIEWS.slice();
+  return [];
 }
 function saveReviews(list){
   try { localStorage.setItem(REVIEW_KEY, JSON.stringify(list)); } catch (e) {}
@@ -334,6 +333,10 @@ function renderReviews(){
   clear(wrap);
   const avg = list.length ? (list.reduce(function(s, r){ return s + r.stars; }, 0) / list.length).toFixed(1) : "—";
   $("#reviewCount").textContent = list.length + " reviews · average " + avg + " / 5 stars";
+  if (!list.length){
+    wrap.appendChild(el("p", "sub", "No reviews yet — sign in with Google and be the first to review PRABIR.DEV!"));
+    return;
+  }
   list.forEach(function(r){
     const card = el("div", "review");
     const head = el("div", "rhead");
