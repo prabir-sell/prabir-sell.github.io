@@ -229,26 +229,29 @@ function renderDetail(id){
 }
 
 /* ===== Static sections ===== */
+/* ===== Home — itheit-style shop landing: pills + all 20 cards + FAQ ===== */
+let homeCat = "";
+function renderHomeGrid(){
+  const grid = $("#homeGrid");
+  let list = TEMPLATES.slice();
+  if (homeCat) list = list.filter(function(t){ return t.cat === homeCat; });
+  clear(grid);
+  list.forEach(function(t){ grid.appendChild(makeCard(t)); });
+  $("#homeCount").textContent = list.length + " website" + (list.length === 1 ? "" : "s") + " shown";
+}
+function renderHomePills(){
+  const wrap = $("#homePills");
+  clear(wrap);
+  ["", "Business","Restaurant","Education","Healthcare","Portfolio","Professional","Online Store","Travel","Personal"].forEach(function(c){
+    const b = el("button", "pill" + (homeCat === c ? " active" : ""), c === "" ? "All" : c);
+    b.type = "button";
+    b.addEventListener("click", function(){ homeCat = c; renderHomePills(); renderHomeGrid(); });
+    wrap.appendChild(b);
+  });
+}
 function renderHome(){
-  const fr = $("#featuredRow");
-  clear(fr);
-  FEATURED_IDS.forEach(function(id){ fr.appendChild(makeCard(byId(id))); });
-  const why = $("#whyGrid");
-  clear(why);
-  WHY.forEach(function(w){
-    const c = el("div", "card");
-    c.appendChild(el("b", null, "✓ " + w));
-    why.appendChild(c);
-  });
-  const how = $("#howSteps");
-  clear(how);
-  HOW.forEach(function(s, i){
-    const c = el("div", "card");
-    const n = el("div", "num", String(i + 1));
-    c.appendChild(n);
-    c.appendChild(el("b", null, s));
-    how.appendChild(c);
-  });
+  renderHomePills();
+  renderHomeGrid();
   const faq = $("#faqList");
   clear(faq);
   FAQS.forEach(function(f){
